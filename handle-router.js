@@ -1,11 +1,11 @@
-import{ getApps} from './index';
+import { getApps } from './index';
 
 export async function handleRoute() {
     const apps = getApps();
 
-    const app =apps.find(app => window.location.pathname.startsWith(app.activeRule));
+    const app = apps.find(app => window.location.pathname.startsWith(app.activeRule));
 
-    if(!app) return;
+    if (!app) return;
 
     // load
     const html = await fetchRes(app.entry);
@@ -20,16 +20,19 @@ export async function handleRoute() {
 
     // after loading, js not exeuted
     // get scripts and execute the scripts
-    const res = await execScript();
+    const { bootstrap, mount, unmount } = await execScript();
+    app.bootstrap = bootstrap;
+    app.mount = mount;
+    app.unmount = unmount;
 
     // get the lifecycle methods of sub app
     // subapp expose lifecycle methods by umd(webpack universal module definition)
     // windows['vue-app'] can also get methods
 
-    async function getExternalScripts(){
+    async function getExternalScripts() {
         return Promise.all(Array.from(scripts).map(script => {
             const src = script.getAttribute('src');
-            if(src) {
+            if (src) {
                 return fetchRes(src.startsWith('http') ? src : `${app.entry}/${src}`)
             } else {
                 return Promise.resolve(script.innerHTML);
@@ -37,10 +40,10 @@ export async function handleRoute() {
         }));
     }
 
-    async function getExternalLinks(){
+    async function getExternalLinks() {
         return Promise.all(Array.from(links).map(script => {
             const href = script.getAttribute('href');
-            if(href) {
+            if (href) {
                 return fetchRes(href.startsWith('http') ? href : `${app.entry}/${href}`)
             }
         }));
@@ -49,14 +52,23 @@ export async function handleRoute() {
     async function execScript() {
         const scripts = await getExternalScripts();
         const links = await getExternalLinks();
-        for( const code of scripts) {
+
+        // some weird 
+        const module = {
+            exports: {},
+        };
+        const exports = module.exports;
+
+        for (const code of scripts) {
             eval(code);
         }
 
-        for( const code of links) {
+        for (const code of links) {
             eval(code);
         }
-        
+
+        return module.exports;
+
         // can get subapp here
         //console.log(windows['vue-app'])
     }

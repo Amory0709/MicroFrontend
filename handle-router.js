@@ -9,9 +9,9 @@ export async function handleRoute() {
 
     // load
     const html = await fetchRes(app.entry);
-
-    console.log(html);
-
+    const container = document.getElementById('subapp-container');
+    container.innerHTML = html;
+    // after loading, js not exeuted
     async function fetchRes(url) {
         const res = await fetch(url);
         return res.next();

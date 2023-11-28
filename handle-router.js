@@ -11,17 +11,17 @@ export async function handleRoute() {
     const html = await fetchRes(app.entry);
     const template = document.createElement('div');
     const container = document.getElementById('subapp-container');
+    container.innerHTML = html;
 
     const scripts = html.querySelectorAll('script');
     const links = html.querySelectorAll('link');
-    container.innerHTML = html;
 
     // after loading, js not exeuted
     // get scripts and execute the scripts
     const res = await execScript();
 
     async function getExternalScripts(){
-        return Promise.all(scripts.map(script => {
+        return Promise.all(Array.from(scripts).map(script => {
             const src = script.getAttribute('src');
             if(src) {
                 return fetchRes(src.startsWith('http') ? src : `${app.entry}${src}`)

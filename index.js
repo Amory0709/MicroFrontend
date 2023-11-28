@@ -28,3 +28,7 @@ export const start = () => {
 export const registerMicroApps= (apps) => {
     _apps = apps;
 }
+
+export function getApps() {
+    return _apps;
+}

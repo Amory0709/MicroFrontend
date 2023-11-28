@@ -31,9 +31,23 @@ export async function handleRoute() {
         }));
     }
 
+    async function getExternalLinks(){
+        return Promise.all(Array.from(links).map(script => {
+            const href = script.getAttribute('href');
+            if(href) {
+                return fetchRes(href.startsWith('http') ? href : `${app.entry}${href}`)
+            }
+        }));
+    }
+
     async function execScript() {
         const scripts = await getExternalScripts();
+        const links = await getExternalLinks();
         for( const code of scripts) {
+            eval(code);
+        }
+
+        for( const c of links) {
             eval(code);
         }
     }

@@ -11,7 +11,9 @@ export async function handleRoute() {
     const html = await fetchRes(app.entry);
     const template = document.createElement('div');
     const container = document.getElementById('subapp-container');
-    container.innerHTML = html;
+    template.innerHTML = html;
+
+    container.appendChild(template);
 
     const scripts = html.querySelectorAll('script');
     const links = html.querySelectorAll('link');
@@ -20,11 +22,15 @@ export async function handleRoute() {
     // get scripts and execute the scripts
     const res = await execScript();
 
+    // get the lifecycle methods of sub app
+    // subapp expose lifecycle methods by umd(webpack universal module definition)
+    // windows['vue-app'] can also get methods
+
     async function getExternalScripts(){
         return Promise.all(Array.from(scripts).map(script => {
             const src = script.getAttribute('src');
             if(src) {
-                return fetchRes(src.startsWith('http') ? src : `${app.entry}${src}`)
+                return fetchRes(src.startsWith('http') ? src : `${app.entry}/${src}`)
             } else {
                 return Promise.resolve(script.innerHTML);
             }
@@ -35,7 +41,7 @@ export async function handleRoute() {
         return Promise.all(Array.from(links).map(script => {
             const href = script.getAttribute('href');
             if(href) {
-                return fetchRes(href.startsWith('http') ? href : `${app.entry}${href}`)
+                return fetchRes(href.startsWith('http') ? href : `${app.entry}/${href}`)
             }
         }));
     }
@@ -47,9 +53,12 @@ export async function handleRoute() {
             eval(code);
         }
 
-        for( const c of links) {
+        for( const code of links) {
             eval(code);
         }
+        
+        // can get subapp here
+        //console.log(windows['vue-app'])
     }
 
     async function fetchRes(url) {
